@@ -50,7 +50,7 @@ public_users.get('/isbn/:isbn',function (req, res) {
   }
  });
 
-// async/await
+// async/await isbn
 public_users.get('/isbn-async/:isbn', async (req, res) => {
   try {
     const response = await axios.get('http://localhost:5000/isbn/:isbn');
@@ -92,7 +92,7 @@ public_users.get('/title/:title',function (req, res) {
   }
 });
 
-// async/await
+// async/await title
 public_users.get('/title-async/:title', async (req, res) => {
   try {
     const response = await axios.get('http://localhost:5000/title/:title');
