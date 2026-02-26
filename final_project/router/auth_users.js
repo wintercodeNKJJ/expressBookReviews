@@ -31,7 +31,7 @@ regd_users.post("/login", (req,res) => {
       accessToken,
       username
     };
-    return res.status(200).send({message:"User successfully logged in"});
+    return res.status(200).send({message:"Login successful!"});
   } else {
     return res.status(401).json({ message: "Invalid Login. Check username and password" });
   }

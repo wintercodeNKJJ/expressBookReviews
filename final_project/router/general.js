@@ -4,10 +4,6 @@ let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
-// axios is used below for demonstration of asynchronous requests
-// make sure to install it: npm install axios
-const axios = require('axios');
-
 
 public_users.post("/register", (req,res) => {
   const { username, password } = req.body;
@@ -21,87 +17,87 @@ public_users.post("/register", (req,res) => {
   return res.status(201).json({ message: "User registered successfully", user:username });
 });
 
+// helper functions that return promises
+function getBooks() {
+  return new Promise((resolve) => {
+    resolve(books);
+  });
+}
+
+function getBookByISBN(isbn) {
+  return new Promise((resolve, reject) => {
+    if (books[isbn]) {
+      resolve(books[isbn]);
+    } else {
+      reject(new Error("Book not found"));
+    }
+  });
+}
+
+function getBooksByAuthor(author) {
+  return new Promise((resolve, reject) => {
+    const key = author.toLowerCase();
+    let results = {};
+    for (let isbn in books) {
+      if (books[isbn].author.toLowerCase() === key) {
+        results[isbn] = books[isbn];
+      }
+    }
+    if (Object.keys(results).length > 0) {
+      resolve(results);
+    } else {
+      reject(new Error("No books found for that author"));
+    }
+  });
+}
+
+function getBooksByTitle(title) {
+  return new Promise((resolve, reject) => {
+    const key = title.toLowerCase();
+    let results = {};
+    for (let isbn in books) {
+      if (books[isbn].title.toLowerCase() === key) {
+        results[isbn] = books[isbn];
+      }
+    }
+    if (Object.keys(results).length > 0) {
+      resolve(results);
+    } else {
+      reject(new Error("No books found with that title"));
+    }
+  });
+}
+
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
-  // return full list of books
-  return res.status(200).json(books);
-});
-
-// --- examples showing how a client might fetch the same list with axios ---
-
-
-// async/await
-public_users.get('/books-async', async (req, res) => {
-  try {
-    const response = await axios.get('http://localhost:5000/');
-    return res.status(200).json(response.data);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+  getBooks()
+    .then(data => res.status(200).json(data))
+    .catch(err => res.status(500).json({ message: err.message }));
 });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   const isbn = req.params.isbn;
-  if (books[isbn]) {
-    return res.status(200).json(books[isbn]);
-  } else {
-    return res.status(404).json({ message: "Book not found" });
-  }
+  getBookByISBN(isbn)
+    .then(book => res.status(200).json(book))
+    .catch(() => res.status(404).json({ message: "Book not found" }));
  });
-
-// async/await isbn
-public_users.get('/isbn-async/:isbn', async (req, res) => {
-  try {
-    const response = await axios.get('http://localhost:5000/isbn/:isbn');
-    return res.status(200).json(response.data);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
-  const author = req.params.author.toLowerCase();
-  let results = {};
-  for (let isbn in books) {
-    if (books[isbn].author.toLowerCase() === author) {
-      results[isbn] = books[isbn];
-    }
-  }
-  if (Object.keys(results).length > 0) {
-    return res.status(200).json(results);
-  } else {
-    return res.status(404).json({ message: "No books found for that author" });
-  }
+  const author = req.params.author;
+  getBooksByAuthor(author)
+    .then(results => res.status(200).json(results))
+    .catch(() => res.status(404).json({ message: "No books found for that author" }));
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
-  const title = req.params.title.toLowerCase();
-  let results = {};
-  for (let isbn in books) {
-    if (books[isbn].title.toLowerCase() === title) {
-      results[isbn] = books[isbn];
-    }
-  }
-  if (Object.keys(results).length > 0) {
-    return res.status(200).json(results);
-  } else {
-    return res.status(404).json({ message: "No books found with that title" });
-  }
+  const title = req.params.title;
+  getBooksByTitle(title)
+    .then(results => res.status(200).json(results))
+    .catch(() => res.status(404).json({ message: "No books found with that title" }));
 });
-
-// async/await title
-public_users.get('/title-async/:title', async (req, res) => {
-  try {
-    const response = await axios.get('http://localhost:5000/title/:title');
-    return res.status(200).json(response.data);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
-
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
   const isbn = req.params.isbn;
