@@ -1,0 +1,3 @@
+curl "http://localhost:5000/author/Samuel Beckett" -o getbooksbyauthor.txt
+
+{"10":{"author":"Samuel Beckett","title":"Molloy, Malone Dies, The Unnamable, the trilogy","reviews":{}}}
